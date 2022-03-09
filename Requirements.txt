@@ -1,0 +1,12 @@
+Python Modules
+--------------
+	datetime
+	json
+	requests
+	argparse
+	logging
+	bs4
+	tabulate
+	slack_client
+
+Slack account + Slack webhook
