@@ -8,29 +8,29 @@ from tabulate import tabulate
 from slack_client import slacker
 
 Format = '[%(asctime)-15s] %(message)s'
-logging.basicConfig(format = Format, level = logging.DEBUG, filename = 'bot.log', filemode = 'a')
+logging.basicConfig(format=Format, level=logging.DEBUG, filename='bot.log', filemode='a')
 
 url = 'https://www.mohfw.gov.in/'
-short_headers = ['Sl.No','State Name', 'Active', 'Discharged', 'Deaths', 'Vaccinated']
+short_headers = ['Sl.No', 'State Name', 'Active', 'Discharged', 'Deaths', 'Vaccinated']
 file_name = 'corona_info_india.json'
 extract_contents = lambda row: [x.text.replace('\n', '') for x in row]
 
 
 def save(x):
 	with open(file_name, 'w') as f:
-		json.dump(x,f)
+		json.dump(x, f)
 		
 
 def load():
 	ret = {}
-	with open(file_name, 'w') as f:
-		ret = json.loadd(f)
+	with open(file_name, 'r') as f:
+		ret = json.load(f)
 	return ret
 
 
-if __name__ = '__main__':
-	parser = argparse.ArgumentParsesr()
-	parser.add_argument('--states', default = ',')
+if __name__ == '__main__':
+	parser = argparse.ArgumentParser()
+	parser.add_argument('--states', default=',')
 	args = parser.parse_args()
 	interested_states = args.states.split(',')
 	
@@ -40,12 +40,12 @@ if __name__ = '__main__':
 	try:
 		response = requests.get(url).content
 		soup = BeautifulSoup(response, 'html.parser')
-		header = extract_contents(soup.tr.find_all('th')
+		header = extract_contents(soup.tr.find_all('th'))
 		
 		stats = []
 		all_rows = soup.find_all('tr')
 		for row in all_rows:
-			stat = extract_contents(row.find_all('td')
+			stat = extract_contents(row.find_all('td'))
 			if stat:
 				if len(stat) == 5:
 					stat = ['', *stat]
@@ -73,7 +73,7 @@ if __name__ = '__main__':
 		events_info = ''
 		for event in info:
 			logging.warning(event)
-			events_info += '\n - '  event.replace("'", "")
+			events_info += '\n - ' + event.replace("'", "")
 			
 		if changed:
 			for state in cur_data:
@@ -81,8 +81,10 @@ if __name__ = '__main__':
 				past_data[state][current_time] = cur_data[state][current_time]
 			save(past_data)
 			
-			table = tabulate(stats, headers = short_headers, tablefmt = 'psql')
+			table = tabulate(stats, headers=short_headers, tablefmt='psql')
 			slack_text = f'Covid Summary :India: \n{events_info}\n```{table}```'
+			slacker()(slack_text)
+
 	except Exception as e:
 		logging.exception('Sorry for the inconvenience.')
 		slacker()(f'Exception Occured: [{e}]')	
